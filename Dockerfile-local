@@ -1,0 +1,19 @@
+FROM node:18 as webBuild
+WORKDIR /tmp
+COPY ./frontend ./frontend
+WORKDIR /tmp/frontend
+RUN yarn install
+RUN yarn build
+
+FROM amazoncorretto:17-alpine as serverBuild
+WORKDIR /tmp
+COPY ./backend ./backend
+COPY --from=webBuild /tmp/frontend/dist /tmp/backend/src/main/resources/static
+WORKDIR /tmp/backend
+
+RUN ./gradlew build -x test
+
+FROM amazoncorretto:17
+COPY --from=serverBuild /tmp/backend/build/libs/backend-0.0.1-SNAPSHOT.jar ./app.jar
+EXPOSE 8080
+CMD java -jar app.jar

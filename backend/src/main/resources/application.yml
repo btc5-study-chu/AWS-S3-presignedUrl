@@ -1,0 +1,15 @@
+#spring:
+#  datasource:
+#    driver-class-name: org.postgresql.Driver
+#    url: jdbc:postgresql://localhost:5436/s3-presignedurl
+#    username: admin
+#    password: admin
+#  jpa:
+#    generate-ddl: true
+
+aws:
+  s3:
+    bucket: s3-presignedurl-test
+    endpoint: http://localhost:9000
+    region: not_in_use
+    use-minio: true
