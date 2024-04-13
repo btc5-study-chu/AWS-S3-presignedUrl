@@ -14,13 +14,13 @@ export const FileUpload: React.FC = () => {
     };
 
     const uploadFileToS3 = async () => {
-        if (!files) {
+        if (files.length === 0) {
             alert('ファイルが選択されていません。');
             return;
         }
 
         try {
-            const results = await fileUploadService.getPresignedUrl(files)
+            const results = await fileUploadService.putPresignedUrl(files)
 
             for (const result of results) {
                 const index = results.indexOf(result);

@@ -6,7 +6,7 @@ export type requestBodyType = {
 
 class FileUploadService {
 
-    async getPresignedUrl(files: File[]) {
+    async putPresignedUrl(files: File[]) {
         const requestBody = this.createReqestBody(files)
         try {
             const result = await fileUploadRepository.getPresignedUrl(requestBody)
