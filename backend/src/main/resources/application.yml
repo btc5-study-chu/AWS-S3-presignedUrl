@@ -1,11 +1,11 @@
-#spring:
-#  datasource:
-#    driver-class-name: org.postgresql.Driver
-#    url: jdbc:postgresql://localhost:5436/s3-presignedurl
-#    username: admin
-#    password: admin
-#  jpa:
-#    generate-ddl: true
+spring:
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    url: jdbc:postgresql://localhost:5436/s3-presignedurl
+    username: admin
+    password: admin
+  jpa:
+    generate-ddl: true
 
 aws:
   s3:

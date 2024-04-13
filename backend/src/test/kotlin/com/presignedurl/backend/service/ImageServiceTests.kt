@@ -3,10 +3,14 @@ package com.presignedurl.backend.service
 import com.amazonaws.HttpMethod
 import com.amazonaws.services.s3.AmazonS3
 import com.presignedurl.backend.config.S3Config
+import com.presignedurl.backend.entity.ImageEntity
 import com.presignedurl.backend.model.FileNameContentType
+import com.presignedurl.backend.repository.ImageRepository
 import io.mockk.*
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
+import org.springframework.boot.test.mock.mockito.MockBean
 import java.net.URL
 import java.util.*
 
@@ -14,8 +18,20 @@ class ImageServiceTests {
     private val mockedS3 = mockk<AmazonS3>()
     private val mockedS3Config = mockk<S3Config>()
 
+    @MockBean
+    private lateinit var repository:ImageRepository
+
+    private lateinit var service: ImageService
+
+
+    @BeforeEach
+    fun setUp () {
+        repository = mockk()
+        service = ImageServiceImpl(mockedS3,mockedS3Config, repository)
+    }
+
     @Test
-    fun `createPresignedUrls()を実行すると、S3からpresignedUrlsを作成して、それを返す`() {
+    fun `createPutPresignedUrls()を実行すると、正しい引数でImageRepositorysaveメソッドを呼ぶ`() {
         // arrange
         every { mockedS3Config.bucket } returns "my-bucket"
         val id1 = UUID.randomUUID()
@@ -31,10 +47,62 @@ class ImageServiceTests {
             URL("http", "www.example.com", url2),
             URL("http", "www.example.com", url3)
         )
-        val service = ImageServiceImpl(mockedS3, mockedS3Config)
+        every { repository.save(any()) } returns ImageEntity()
 
         // action
-        val result = service.createPresignedUrls(
+        val result = service.createPutPresignedUrls(
+            listOf(
+                FileNameContentType("image/jpeg", "original1.jpeg"),
+                FileNameContentType("image/jpeg", "original2.jpg"),
+                FileNameContentType("image/png", "original3.png")
+            )
+        )
+
+        verifySequence {
+            repository.save(
+                match {
+                    it.fileActualName == "original1.jpeg"
+                    it.fileUUIDName == "$id1.jpeg"
+                }
+            )
+            repository.save(
+                match {
+                    it.fileActualName == "original2.jpg"
+                    it.fileUUIDName == "$id2.jpeg" //jpg拡張子はjpegで扱われるため
+                }
+            )
+            repository.save(
+                match {
+                    it.fileActualName == "original3.png"
+                    it.fileUUIDName == "$id3.png"
+                }
+            )
+        }
+        unmockkStatic(UUID::class)
+    }
+
+    @Test
+    fun `createPutPresignedUrls()を実行すると、S3からpresignedUrlsを作成して、それを返す`() {
+        // arrange
+        every { mockedS3Config.bucket } returns "my-bucket"
+        val id1 = UUID.randomUUID()
+        val id2 = UUID.randomUUID()
+        val id3 = UUID.randomUUID()
+        val id4 = UUID.randomUUID()
+        mockkStatic(UUID::class)
+        every { UUID.randomUUID() } returnsMany listOf(id1,id2,id3)
+        val url1 = "/$id1.jpeg"
+        val url2 = "/$id2.jpeg"
+        val url3 = "/$id3.png"
+        every { mockedS3.generatePresignedUrl(any(), any(), any(), any()) } returnsMany listOf(
+            URL("http", "www.example.com", url1),
+            URL("http", "www.example.com", url2),
+            URL("http", "www.example.com", url3)
+        )
+        every { repository.save(any()) } returns ImageEntity()
+
+        // action
+        val result = service.createPutPresignedUrls(
             listOf(
                 FileNameContentType("image/jpeg", "original1.jpeg"),
                 FileNameContentType("image/jpeg", "original2.jpg"),

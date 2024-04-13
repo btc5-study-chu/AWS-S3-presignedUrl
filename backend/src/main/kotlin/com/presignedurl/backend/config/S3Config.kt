@@ -28,7 +28,6 @@ class S3Config(
     fun baseS3Url(): String {
         return if (useMinIO) {
             "$endpoint/$bucket"
-            
         } else {
             "https://$bucket.s3.$region.amazonaws.com"
         }
