@@ -6,6 +6,7 @@ import com.presignedurl.backend.config.S3Config
 import com.presignedurl.backend.entity.ImageEntity
 import com.presignedurl.backend.model.FileNameContentType
 import com.presignedurl.backend.model.PresignedUrl
+import com.presignedurl.backend.model.ResponseImage
 import com.presignedurl.backend.repository.ImageRepository
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -14,6 +15,7 @@ import java.util.*
 class UnsupportedContentTypeException(message: String) : Exception(message)
 interface ImageService {
     fun createPutPresignedUrls (files:List<FileNameContentType>):List<PresignedUrl>
+    fun getAllImages():List<ResponseImage>
 //    fun createGetPresignedUrls (files:List<FileNameContentType>):List<PresignedUrl>
 }
 
@@ -39,6 +41,16 @@ class ImageServiceImpl(
             )
         }
         return urls
+    }
+
+    override fun getAllImages():List<ResponseImage> {
+        val res = repository.findAll()
+        return res.map {
+            ResponseImage(
+                id = it.id!!,
+                fileName = it.fileActualName
+            )
+        }
     }
 
     private fun getExtension(contentType: String): String {

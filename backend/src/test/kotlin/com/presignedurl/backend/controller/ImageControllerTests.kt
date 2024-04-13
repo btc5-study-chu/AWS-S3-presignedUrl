@@ -2,6 +2,7 @@ package com.presignedurl.backend.controller
 
 import com.presignedurl.backend.model.FileNameContentType
 import com.presignedurl.backend.model.PresignedUrl
+import com.presignedurl.backend.model.ResponseImage
 import com.presignedurl.backend.service.ImageService
 import io.mockk.every
 import io.mockk.mockk
@@ -20,6 +21,7 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers
 import org.springframework.test.web.servlet.setup.MockMvcBuilders
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
+import org.junit.jupiter.api.Assertions.assertEquals
 
 @SpringBootTest
 //@AutoConfigureMockRestServiceServer
@@ -39,6 +41,26 @@ class ImageControllerTests{
         service = mockk()
         controller = ImageController(service)
         mockMvc = MockMvcBuilders.standaloneSetup(controller).build()
+    }
+
+    @Nested
+    inner class `getAllImagesのテスト` {
+        @Test
+        fun `getAllImagesを呼ぶと 200 OK でかつservice層のgetAllImagesを呼んで正しい値を返す` () {
+            every { service.getAllImages() } returns listOf(
+                ResponseImage(fileName = "testImage1"),
+                ResponseImage(fileName = "testImage2")
+            )
+
+            val res = mockMvc.perform(
+                get("/api/images")
+            )
+                .andExpect(status().isOk)
+                .andExpect(MockMvcResultMatchers.jsonPath("$[0].fileName").value("testImage1"))
+                .andExpect(MockMvcResultMatchers.jsonPath("$[1].fileName").value("testImage2"))
+
+            verify (exactly = 1) { service.getAllImages() }
+        }
     }
 
     @Nested

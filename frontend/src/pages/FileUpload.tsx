@@ -33,6 +33,8 @@ export const FileUpload: React.FC = () => {
         }
     };
 
+
+
     return (
         <div data-testid="FileUploadPage">
             <input type="file" multiple={true} onChange={handleFileChange} />
