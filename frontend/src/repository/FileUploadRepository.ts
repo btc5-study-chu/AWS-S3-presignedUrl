@@ -7,8 +7,12 @@ export type responsePresignedUrl = {
     url:string
 }
 
+export type requestGetPresignedUrl = {
+    id : string
+}
+
 class FileUploadRepository {
-    async getPresignedUrl(reqBody:requestBodyType){
+    async putPresignedUrl(reqBody:requestBodyType){
         try {
             const result:responsePresignedUrl[] = await axios.post('/api/images/putPresignedUrls',reqBody).then(elm => elm.data)
             return result
@@ -27,6 +31,10 @@ class FileUploadRepository {
 
     async getAllImages():Promise<UploadList[]>{
         return await axios.get("api/images").then(elm => elm.data)
+    }
+
+    async getPresignedUrl(idList:requestGetPresignedUrl[]):Promise<responsePresignedUrl[]>{
+        return await axios.post("/api/images/getPresignedUrls",idList).then(elm => elm.data)
     }
 }
 

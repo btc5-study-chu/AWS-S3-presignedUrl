@@ -2,6 +2,7 @@ package com.presignedurl.backend.controller
 
 import com.presignedurl.backend.model.PresignedUrl
 import com.presignedurl.backend.model.PresignedUrlsRequest
+import com.presignedurl.backend.model.RequestGetPresinged
 import com.presignedurl.backend.model.ResponseImage
 import com.presignedurl.backend.service.ImageService
 import org.springframework.web.bind.annotation.GetMapping
@@ -20,8 +21,12 @@ class ImageController (
         return imageService.getAllImages()
     }
 
-    @GetMapping("/getPresignedUrls")
-    fun createGetPresignedUrls (){}
+    @PostMapping("/getPresignedUrls")
+    fun createGetPresignedUrls (
+        @RequestBody request: List<RequestGetPresinged>
+    ):List<PresignedUrl>{
+        return imageService.createGetPresignedUrls(request)
+    }
 
     @PostMapping("/putPresignedUrls")
     fun createPutPresignedUrls (

@@ -6,6 +6,7 @@ import com.presignedurl.backend.config.S3Config
 import com.presignedurl.backend.entity.ImageEntity
 import com.presignedurl.backend.model.FileNameContentType
 import com.presignedurl.backend.model.PresignedUrl
+import com.presignedurl.backend.model.RequestGetPresinged
 import com.presignedurl.backend.model.ResponseImage
 import com.presignedurl.backend.repository.ImageRepository
 import org.springframework.beans.factory.annotation.Autowired
@@ -15,8 +16,8 @@ import java.util.*
 class UnsupportedContentTypeException(message: String) : Exception(message)
 interface ImageService {
     fun createPutPresignedUrls (files:List<FileNameContentType>):List<PresignedUrl>
+    fun createGetPresignedUrls (getDataReq:List<RequestGetPresinged>):List<PresignedUrl>
     fun getAllImages():List<ResponseImage>
-//    fun createGetPresignedUrls (files:List<FileNameContentType>):List<PresignedUrl>
 }
 
 @Service
@@ -38,6 +39,21 @@ class ImageServiceImpl(
             PresignedUrl(
                 fileName,
                 createPresignedUrl(fileName)
+            )
+        }
+        return urls
+    }
+
+    override fun createGetPresignedUrls(getDataReq: List<RequestGetPresinged>): List<PresignedUrl> {
+        val urls = getDataReq.map {
+            val uuid = UUID.fromString(it.id)
+            val res = repository.findById(uuid).orElseThrow {
+                NoSuchElementException("Image with ID $uuid not found")
+            }
+            val fileName = res.fileUUIDName
+            PresignedUrl(
+                fileName,
+                createGetPresignedUrl(fileName)
             )
         }
         return urls
@@ -71,6 +87,14 @@ class ImageServiceImpl(
             fileName,
             get24hoursExpiration(),
             HttpMethod.PUT
+        ).toString()
+    }
+    private fun createGetPresignedUrl(fileName: String): String {
+        return amazonS3.generatePresignedUrl(
+            s3Config.bucket,
+            fileName,
+            get24hoursExpiration(),
+            HttpMethod.GET
         ).toString()
     }
 

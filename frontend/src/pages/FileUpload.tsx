@@ -1,8 +1,12 @@
-import React, {useContext, useEffect} from 'react';
+import React, {ChangeEvent, useContext, useEffect, useState} from 'react';
 import {ApplicationContext} from "../contexts/ApplicationProvider.tsx";
 import {fileUploadService} from "../service/FileUploadService.ts";
+import {responsePresignedUrl} from "../repository/FileUploadRepository.ts";
 
 export const FileUpload: React.FC = () => {
+
+    const [checkList, setCheckList] = useState<string[]>([])
+    const [showImages,setShowImages] = useState<responsePresignedUrl[]>([])
 
     const {files, setFiles} = useContext(ApplicationContext)!
     const {uploadList,setUploadList} = useContext(ApplicationContext)!
@@ -33,6 +37,27 @@ export const FileUpload: React.FC = () => {
         }
     };
 
+    const handleCheckBox = (e:ChangeEvent<HTMLInputElement>,id:string)=>{
+        const currentCheckList = [...checkList]
+        if (e.target.checked) {
+            setCheckList([...currentCheckList,id])
+        } else {
+            const index = currentCheckList.findIndex(elm => elm === id)
+            currentCheckList.splice(index,1)
+            setCheckList([...currentCheckList])
+        }
+    }
+
+    const handleGetImage = async () =>{
+        if (checkList.length === 0) {
+            alert("選択されていません")
+            return
+        }
+        const res = await fileUploadService.getPresignedUrl(checkList)
+        console.log("res : ",res)
+        setShowImages(res)
+    }
+
     useEffect(() => {
         fileUploadService.getAllImages().then(res => setUploadList(res))
     }, []);
@@ -48,7 +73,7 @@ export const FileUpload: React.FC = () => {
                     return (
                         <div key={elm.id}>
                             <br/>
-                            <input type="checkbox"/>
+                            <input type="checkbox" onChange={(e:ChangeEvent<HTMLInputElement>)=>handleCheckBox(e,elm.id)}/>
                             <br/>
                             <label>{elm.id}</label>
                             <br/>
@@ -57,7 +82,16 @@ export const FileUpload: React.FC = () => {
                         </div>
                         )
                 })}
-                <button>画像を取得する</button>
+                <button onClick={handleGetImage}>画像を取得する</button>
+            </div>
+            <div data-testid="imageArea">
+                {showImages.length !==0 && showImages.map((elm,index) => {
+                    return (
+                        <div key={index}>
+                            <img src={elm.url} alt={elm.fileName}/>
+                        </div>
+                    )
+                })}
             </div>
         </>
     );
