@@ -1,3 +1,19 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://${POSTGRES_URL}:5432/s3-presignedurl
+    driver-class-name: org.postgresql.Driver
+    username: ${POSTGRES_USERNAME}
+    password: ${POSTGRES_PASSWORD}
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    show-sql: true
+    generate-ddl: true
+    properties:
+      javax:
+        persistence:
+          validation:
+            mode: none
+
 aws:
   s3:
     bucket: ${S3_BUCKET_NAME}
