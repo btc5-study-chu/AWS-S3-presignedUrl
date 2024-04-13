@@ -1,5 +1,5 @@
-import {render, screen, within} from "@testing-library/react";
-import {ApplicationContext, ApplicationState} from "../../contexts/ApplicationProvider.tsx";
+import {render, screen, waitFor, within} from "@testing-library/react";
+import {ApplicationContext, ApplicationState, UploadList} from "../../contexts/ApplicationProvider.tsx";
 import {FileUpload} from "../../pages/FileUpload.tsx";
 import {DefaultApplicationProvider} from "../utils/DefaultApplicationProvider.ts";
 import {ReactNode} from "react";
@@ -13,21 +13,65 @@ vi.mock("../../service/FileUploadService.ts")
 const originalAlert = window.alert
 describe("FileUploadのテスト",()=>{
 
+    beforeEach(()=>{
+        vi.mocked(fileUploadService.getAllImages).mockImplementation(()=> Promise.resolve([]))
+    })
+
     afterEach(()=>{
         vi.stubGlobal("alert",originalAlert)
     })
 
-    test("FileUploadがレンダーされると正しい要素が表示されている",()=>{
-        renderWithContext({
-            children: <FileUpload />
+    describe("FileUploadがレンダーされると",()=>{
+        test("正しい要素が表示されている",()=>{
+            renderWithContext({
+                children: <FileUpload />,
+                contexts: {
+                    uploadList : [
+                       dummyData[0],
+                        dummyData[1]
+                    ]
+                }
+            })
+
+            const topElement = screen.getByTestId("FileUploadPage")
+            expect(topElement.firstChild).toHaveAttribute("type","file")
+            expect(topElement.firstChild).toHaveProperty("multiple",true)
+            expect(within(topElement).getByRole("button",{name: "アップロード"})).toBeInTheDocument()
+
+            const uploadListElement = screen.getByTestId("uploadListArea")
+            expect(within(uploadListElement.children[0] as HTMLElement).getByRole("checkbox")).toBeInTheDocument()
+            expect(within(uploadListElement.children[0] as HTMLElement).getByText("test1")).toBeInTheDocument()
+            expect(within(uploadListElement.children[0] as HTMLElement).getByText("fileName1")).toBeInTheDocument()
+            expect(within(uploadListElement.children[1] as HTMLElement).getByRole("checkbox")).toBeInTheDocument()
+            expect(within(uploadListElement.children[1] as HTMLElement).getByText("test2")).toBeInTheDocument()
+            expect(within(uploadListElement.children[1] as HTMLElement).getByText("fileName2")).toBeInTheDocument()
+            expect(within(uploadListElement).getByRole("button",{name:"画像を取得する"})).toBeInTheDocument()
         })
 
-        const topElement = screen.getByTestId("FileUploadPage")
+        test("service層のgetAllImagesを呼び、その返り値をsetUploadListの引数にして呼ぶ",()=>{
+            const spyGetAllImages = vi.fn(()=> Promise.resolve([dummyData[0],dummyData[1]]))
+            vi.mocked(fileUploadService.getAllImages).mockImplementation(spyGetAllImages)
 
-        expect(topElement.firstChild).toHaveAttribute("type","file")
-        expect(topElement.firstChild).toHaveProperty("multiple",true)
-        expect(within(topElement).getByRole("button",{name: "アップロード"})).toBeInTheDocument()
+            const spySetUploadList = vi.fn()
+
+
+                renderWithContext({
+                    children: <FileUpload/>,
+                    contexts: {
+                        setUploadList: spySetUploadList
+                    }
+                })
+
+
+            expect(spyGetAllImages).toHaveBeenCalled()
+            waitFor(()=>{
+                expect(spySetUploadList).toHaveBeenCalledWith(dummyData)
+            })
+        })
+
+
     })
+
 
     test("handleFileChangeについて、ファイルが選択されたらsetFilesを正しい引数で呼ぶ",async ()=>{
         const spySetFiles = vi.fn()
@@ -35,6 +79,7 @@ describe("FileUploadのテスト",()=>{
             new File(['hello'], 'hello.png', {type: 'image/png'}),
             new File(['world'], 'world.txt', {type: 'text/plain'})
         ];
+
 
         renderWithContext({
             children: <FileUpload />,
@@ -100,6 +145,12 @@ describe("FileUploadのテスト",()=>{
         expect(spyAlert).toHaveBeenCalledWith('ファイルのアップロードに成功しました。')
     })
 })
+
+const dummyData:UploadList[] = [
+    {id:"test1",fileName:"fileName1"},
+    {id:"test2",fileName:"fileName2"},
+]
+
 
 type renderArg = {
     children:ReactNode,

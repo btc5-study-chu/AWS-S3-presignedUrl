@@ -1,5 +1,6 @@
 import {requestBodyType} from "../service/FileUploadService.ts";
 import axios from "axios";
+import {UploadList} from "../contexts/ApplicationProvider.tsx";
 
 export type responsePresignedUrl = {
     fileName:string,
@@ -22,6 +23,10 @@ class FileUploadRepository {
                 'Content-Type': file.type
             }
         })
+    }
+
+    async getAllImages():Promise<UploadList[]>{
+        return await axios.get("api/images").then(elm => elm.data)
     }
 }
 

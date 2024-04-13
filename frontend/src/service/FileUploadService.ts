@@ -1,4 +1,5 @@
 import {fileUploadRepository} from "../repository/FileUploadRepository.ts";
+import {UploadList} from "../contexts/ApplicationProvider.tsx";
 
 export type requestBodyType = {
     files: { contentType: string, fileName: string }[]
@@ -18,6 +19,10 @@ class FileUploadService {
 
     async uploadToS3(url:string,file:File){
         await fileUploadRepository.uploadToS3(url,file)
+    }
+
+    async getAllImages():Promise<UploadList[]>{
+        return fileUploadRepository.getAllImages()
     }
 
     private createReqestBody = (files: File[]): requestBodyType => {

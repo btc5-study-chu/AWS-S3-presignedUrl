@@ -1,4 +1,8 @@
-export const DefaultApplicationProvider = {
+import {ApplicationState} from "../../contexts/ApplicationProvider.tsx";
+
+export const DefaultApplicationProvider:ApplicationState = {
     files: [],
-    setFiles: ()=>{}
+    setFiles: ()=>{},
+    uploadList:[],
+    setUploadList:()=>{}
 }
