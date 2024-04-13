@@ -39,13 +39,11 @@ class ImageServiceTests {
         val id3 = UUID.randomUUID()
         mockkStatic(UUID::class)
         every { UUID.randomUUID() } returnsMany listOf(id1, id2, id3)
-        val url1 = "/$id1.jpeg"
-        val url2 = "/$id2.jpeg"
-        val url3 = "/$id3.png"
+
         every { mockedS3.generatePresignedUrl(any(), any(), any(), any()) } returnsMany listOf(
-            URL("http", "www.example.com", url1),
-            URL("http", "www.example.com", url2),
-            URL("http", "www.example.com", url3)
+            URL("http", "www.example.com", ""),
+            URL("http", "www.example.com",""),
+            URL("http", "www.example.com", "")
         )
         every { repository.save(any()) } returns ImageEntity()
 
