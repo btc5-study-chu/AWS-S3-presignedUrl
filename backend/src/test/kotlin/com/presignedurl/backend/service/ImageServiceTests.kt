@@ -59,19 +59,19 @@ class ImageServiceTests {
         verifySequence {
             repository.save(
                 match {
-                    it.fileActualName == "original1.jpeg"
+                    it.fileActualName == "original1.jpeg" &&
                     it.fileUUIDName == "$id1.jpeg"
                 }
             )
             repository.save(
                 match {
-                    it.fileActualName == "original2.jpg"
+                    it.fileActualName == "original2.jpg" &&
                     it.fileUUIDName == "$id2.jpeg" //jpg拡張子はjpegで扱われるため
                 }
             )
             repository.save(
                 match {
-                    it.fileActualName == "original3.png"
+                    it.fileActualName == "original3.png" &&
                     it.fileUUIDName == "$id3.png"
                 }
             )
