@@ -29,7 +29,7 @@ class ImageServiceImpl(
     override fun createPutPresignedUrls(files:List<FileNameContentType>):List<PresignedUrl> {
         val urls = files.map { fileNameAndContentType ->
             val extension = getExtension(fileNameAndContentType.contentType)
-            val fileName = "${UUID.randomUUID()}.$extension"
+            val fileName = "${UUID.randomUUID()}.$extension" //階層をつけたい場合は、この先頭に/で区切って階層をつける 例） /test/folder/ファイル名
             repository.save(
                 ImageEntity(
                     fileActualName = fileNameAndContentType.fileName,
