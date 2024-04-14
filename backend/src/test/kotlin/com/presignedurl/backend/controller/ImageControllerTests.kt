@@ -1,8 +1,10 @@
 package com.presignedurl.backend.controller
 
-import com.presignedurl.backend.model.FileNameContentType
-import com.presignedurl.backend.model.PresignedUrl
-import com.presignedurl.backend.model.ResponseImage
+import com.presignedurl.backend.model.request.FileNameContentType
+import com.presignedurl.backend.model.request.RequestGetPresinged
+import com.presignedurl.backend.model.request.RequestPutPresignedUrls
+import com.presignedurl.backend.model.response.ResponsePresignedUrl
+import com.presignedurl.backend.model.response.ResponseImage
 import com.presignedurl.backend.service.ImageService
 import io.mockk.every
 import io.mockk.mockk
@@ -21,7 +23,6 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers
 import org.springframework.test.web.servlet.setup.MockMvcBuilders
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers.status
-import org.junit.jupiter.api.Assertions.assertEquals
 
 @SpringBootTest
 //@AutoConfigureMockRestServiceServer
@@ -64,15 +65,76 @@ class ImageControllerTests{
     }
 
     @Nested
-    inner class `createPutPresignedUrlsのテスト` {
+    inner class `createGetPresignedUrlsのテスト` {
+        @Test
+        fun `api_images_getPresignedUrlsを呼ぶと200OKでかつ正しい引数でservice層のcreateGetPresignedUrlsを呼ぶ`() {
+            every { service.createGetPresignedUrls(any()) } returns emptyList()
+
+            mockMvc.perform(
+                post("/api/images/getPresignedUrls")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(
+                        """
+                            [
+                                {"id": "test1"},
+                                {"id": "test2"},
+                                {"id": "test3"}
+                            ]
+                        """
+                    )
+            )
+                .andExpect(status().isOk)
+
+            verify { service.createGetPresignedUrls(
+                listOf(
+                    RequestGetPresinged(id="test1"),
+                    RequestGetPresinged(id="test2"),
+                    RequestGetPresinged(id="test3")
+                )
+            ) }
+        }
+
+        @Test
+        fun `api_images_getPresignedUrlsを呼ぶと正しい値を返す`() {
+            every { service.createGetPresignedUrls(any()) } returns listOf(
+                ResponsePresignedUrl(fileName = "testFile1", url = "testUrl1"),
+                ResponsePresignedUrl(fileName = "testFile2", url = "testUrl2"),
+                ResponsePresignedUrl(fileName = "testFile3", url = "testUrl3"),
+            )
+
+            mockMvc.perform(
+                post("/api/images/getPresignedUrls")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(
+                        """
+                            [
+                                {"id": "dummy"},
+                                {"id": "dummy"},
+                                {"id": "dummy"}
+                            ]
+                        """
+                    )
+            )
+                .andExpect(status().isOk)
+                .andExpect(MockMvcResultMatchers.jsonPath("$[0].fileName").value("testFile1"))
+                .andExpect(MockMvcResultMatchers.jsonPath("$[0].url").value("testUrl1"))
+                .andExpect(MockMvcResultMatchers.jsonPath("$[1].fileName").value("testFile2"))
+                .andExpect(MockMvcResultMatchers.jsonPath("$[1].url").value("testUrl2"))
+                .andExpect(MockMvcResultMatchers.jsonPath("$[2].fileName").value("testFile3"))
+                .andExpect(MockMvcResultMatchers.jsonPath("$[2].url").value("testUrl3"))
+        }
+    }
+
+    @Nested
+    inner class createPutResponsePresignedUrlsのテスト {
         @Test
         fun `createPutPresignedUrls() を呼んだ時、200 OKでかつ正しい引数でサービス層のcreatePresignedUrlメソッドを呼ぶ`() {
             every { service.createPutPresignedUrls(any()) } returns listOf(
-                PresignedUrl("test1","https://test1"),
-                PresignedUrl("test2","https://test2"),
-                PresignedUrl("test3","https://test3"),
-                PresignedUrl("test4","https://test4"),
-                PresignedUrl("test5","https://test5"),
+                ResponsePresignedUrl("test1","https://test1"),
+                ResponsePresignedUrl("test2","https://test2"),
+                ResponsePresignedUrl("test3","https://test3"),
+                ResponsePresignedUrl("test4","https://test4"),
+                ResponsePresignedUrl("test5","https://test5"),
             )
 
             mockMvc.perform(
@@ -93,12 +155,14 @@ class ImageControllerTests{
                 .andExpect(status().isOk)
 
             verify (exactly = 1) { service.createPutPresignedUrls(
-                listOf(
-                    FileNameContentType("image/jpeg","original1.jpeg"),
-                    FileNameContentType("image/jpeg","original2.jpg"),
-                    FileNameContentType("image/png","original3.png"),
-                    FileNameContentType("image/heif","original4.heif"),
-                    FileNameContentType("image/heic","original5.heic")
+                RequestPutPresignedUrls(
+                    files = listOf(
+                        FileNameContentType("image/jpeg","original1.jpeg"),
+                        FileNameContentType("image/jpeg","original2.jpg"),
+                        FileNameContentType("image/png","original3.png"),
+                        FileNameContentType("image/heif","original4.heif"),
+                        FileNameContentType("image/heic","original5.heic")
+                    )
                 )
             ) }
         }
@@ -106,11 +170,11 @@ class ImageControllerTests{
         @Test
         fun `createPutPresignedUrls() を呼んだ時、正しい返り値を返す`() {
             every { service.createPutPresignedUrls(any()) } returns listOf(
-                PresignedUrl("test1","https://test1"),
-                PresignedUrl("test2","https://test2"),
-                PresignedUrl("test3","https://test3"),
-                PresignedUrl("test4","https://test4"),
-                PresignedUrl("test5","https://test5"),
+                ResponsePresignedUrl("test1","https://test1"),
+                ResponsePresignedUrl("test2","https://test2"),
+                ResponsePresignedUrl("test3","https://test3"),
+                ResponsePresignedUrl("test4","https://test4"),
+                ResponsePresignedUrl("test5","https://test5"),
             )
 
             mockMvc.perform(
@@ -142,16 +206,6 @@ class ImageControllerTests{
         }
     }
 
-//    @Nested
-//    inner class `createGetPresignedUrlsのテスト` {
-//        @Test
-//        fun `api_images_getPresignedUrlsを呼ぶと200OKになる`() {
-//            mockMvc.perform(
-//                post("/api/images/getPresignedUrls")
-//            )
-//                .andExpect(status().isOk)
-//
-//        }
-//    }
+
 
 }

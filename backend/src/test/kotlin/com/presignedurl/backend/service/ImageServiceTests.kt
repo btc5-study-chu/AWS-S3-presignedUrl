@@ -4,7 +4,9 @@ import com.amazonaws.HttpMethod
 import com.amazonaws.services.s3.AmazonS3
 import com.presignedurl.backend.config.S3Config
 import com.presignedurl.backend.entity.ImageEntity
-import com.presignedurl.backend.model.FileNameContentType
+import com.presignedurl.backend.model.request.FileNameContentType
+import com.presignedurl.backend.model.request.RequestGetPresinged
+import com.presignedurl.backend.model.request.RequestPutPresignedUrls
 import com.presignedurl.backend.repository.ImageRepository
 import io.mockk.*
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -52,7 +54,7 @@ class ImageServiceTests {
     }
 
     @Nested
-    inner class `createPutPresignedUrlsのテスト` {
+    inner class createPutResponsePresignedUrlsのテスト {
         @Test
         fun `createPutPresignedUrls()を実行すると、正しい引数でImageRepositorysaveメソッドを呼ぶ`() {
             // arrange
@@ -72,10 +74,12 @@ class ImageServiceTests {
 
             // action
             val result = service.createPutPresignedUrls(
-                listOf(
-                    FileNameContentType("image/jpeg", "original1.jpeg"),
-                    FileNameContentType("image/jpeg", "original2.jpg"),
-                    FileNameContentType("image/png", "original3.png")
+                RequestPutPresignedUrls(
+                    files = listOf(
+                        FileNameContentType("image/jpeg", "original1.jpeg"),
+                        FileNameContentType("image/jpeg", "original2.jpg"),
+                        FileNameContentType("image/png", "original3.png")
+                    )
                 )
             )
 
@@ -109,7 +113,6 @@ class ImageServiceTests {
             val id1 = UUID.randomUUID()
             val id2 = UUID.randomUUID()
             val id3 = UUID.randomUUID()
-            val id4 = UUID.randomUUID()
             mockkStatic(UUID::class)
             every { UUID.randomUUID() } returnsMany listOf(id1,id2,id3)
             val url1 = "/$id1.jpeg"
@@ -124,11 +127,14 @@ class ImageServiceTests {
 
             // action
             val result = service.createPutPresignedUrls(
-                listOf(
-                    FileNameContentType("image/jpeg", "original1.jpeg"),
-                    FileNameContentType("image/jpeg", "original2.jpg"),
-                    FileNameContentType("image/png", "original3.png")
+                RequestPutPresignedUrls(
+                    files = listOf(
+                        FileNameContentType("image/jpeg", "original1.jpeg"),
+                        FileNameContentType("image/jpeg", "original2.jpg"),
+                        FileNameContentType("image/png", "original3.png")
+                    )
                 )
+
             )
 
             verifySequence {
@@ -156,6 +162,83 @@ class ImageServiceTests {
             assertEquals("http://www.example.com$url2", result[1].url)
             assertEquals("http://www.example.com$url3", result[2].url)
             unmockkStatic(UUID::class)
+        }
+    }
+    @Nested
+    inner class createGetResponsePresignedUrlsのテスト {
+        @Test
+        fun `createGetPresignedUrls()を実行すると、正しい引数でImageRepositoryのfindByIdメソッドを呼ぶ`() {
+            // arrange
+            every { repository.findById(any()) } returns Optional.of(ImageEntity())
+            every { mockedS3.generatePresignedUrl(any(), any(), any(), any()) } returns URL("http", "", "")
+            every { mockedS3Config.bucket } returns ""
+
+            // action
+            service.createGetPresignedUrls(
+                listOf(
+                    RequestGetPresinged(id = "12345678-1234-1234-1234-123456789012"),
+                    RequestGetPresinged(id = "12345678-1234-1234-1234-123456789013"),
+                    RequestGetPresinged(id = "12345678-1234-1234-1234-123456789014"),
+                )
+            )
+
+            verifySequence {
+                repository.findById(UUID.fromString("12345678-1234-1234-1234-123456789012"))
+                repository.findById(UUID.fromString("12345678-1234-1234-1234-123456789013"))
+                repository.findById(UUID.fromString("12345678-1234-1234-1234-123456789014"))
+            }
+        }
+
+        @Test
+        fun `createGetPresignedUrls()を実行すると、S3からpresignedUrlsを作成して、それを返す`() {
+            // arrange
+            every { repository.findById(any()) } returnsMany listOf(
+                Optional.of(ImageEntity(fileUUIDName = "testUUID1.png")),
+                Optional.of(ImageEntity(fileUUIDName = "testUUID2.jpeg")),
+                Optional.of(ImageEntity(fileUUIDName = "testUUID3.jpeg"))
+            )
+
+            every { mockedS3Config.bucket } returns "my-bucket"
+            every { mockedS3.generatePresignedUrl(any(), any(), any(), any()) } returnsMany listOf(
+                URL("http", "www.example.com", "/testUUID1.png"),
+                URL("http", "www.example.com", "/testUUID2.jpeg"),
+                URL("http", "www.example.com", "/testUUID3.jpeg")
+            )
+            every { repository.save(any()) } returns ImageEntity()
+
+            // action
+            val result = service.createGetPresignedUrls(
+                listOf(
+                    RequestGetPresinged(id = "12345678-1234-1234-1234-123456789012"),
+                    RequestGetPresinged(id = "12345678-1234-1234-1234-123456789013"),
+                    RequestGetPresinged(id = "12345678-1234-1234-1234-123456789014"),
+                )
+            )
+
+            verifySequence {
+                mockedS3.generatePresignedUrl(
+                    "my-bucket",
+                    "testUUID1.png",
+                    any(),
+                    HttpMethod.GET
+                )
+                mockedS3.generatePresignedUrl(
+                    "my-bucket",
+                    "testUUID2.jpeg",
+                    any(),
+                    HttpMethod.GET
+                )
+                mockedS3.generatePresignedUrl(
+                    "my-bucket",
+                    "testUUID3.jpeg",
+                    any(),
+                    HttpMethod.GET
+                )
+            }
+
+            assertEquals("http://www.example.com/testUUID1.png", result[0].url)
+            assertEquals("http://www.example.com/testUUID2.jpeg", result[1].url)
+            assertEquals("http://www.example.com/testUUID3.jpeg", result[2].url)
         }
     }
 }

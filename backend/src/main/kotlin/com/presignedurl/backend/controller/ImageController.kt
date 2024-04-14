@@ -1,9 +1,9 @@
 package com.presignedurl.backend.controller
 
-import com.presignedurl.backend.model.PresignedUrl
-import com.presignedurl.backend.model.PresignedUrlsRequest
-import com.presignedurl.backend.model.RequestGetPresinged
-import com.presignedurl.backend.model.ResponseImage
+import com.presignedurl.backend.model.response.ResponsePresignedUrl
+import com.presignedurl.backend.model.request.RequestPutPresignedUrls
+import com.presignedurl.backend.model.request.RequestGetPresinged
+import com.presignedurl.backend.model.response.ResponseImage
 import com.presignedurl.backend.service.ImageService
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PostMapping
@@ -24,14 +24,14 @@ class ImageController (
     @PostMapping("/getPresignedUrls")
     fun createGetPresignedUrls (
         @RequestBody request: List<RequestGetPresinged>
-    ):List<PresignedUrl>{
+    ):List<ResponsePresignedUrl>{
         return imageService.createGetPresignedUrls(request)
     }
 
     @PostMapping("/putPresignedUrls")
     fun createPutPresignedUrls (
-        @RequestBody request:PresignedUrlsRequest
-    ):List<PresignedUrl> {
-        return imageService.createPutPresignedUrls(request.files)
+        @RequestBody request: RequestPutPresignedUrls
+    ):List<ResponsePresignedUrl> {
+        return imageService.createPutPresignedUrls(request)
     }
 }

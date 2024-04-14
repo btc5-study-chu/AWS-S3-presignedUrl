@@ -1,4 +1,4 @@
-package com.presignedurl.backend.model
+package com.presignedurl.backend.model.response
 
 import java.util.UUID
 

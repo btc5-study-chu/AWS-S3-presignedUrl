@@ -1,6 +1,6 @@
-package com.presignedurl.backend.model
+package com.presignedurl.backend.model.request
 
-data class PresignedUrlsRequest(
+data class RequestPutPresignedUrls(
     val files: List<FileNameContentType>
 )
 

@@ -4,10 +4,11 @@ import com.amazonaws.HttpMethod
 import com.amazonaws.services.s3.AmazonS3
 import com.presignedurl.backend.config.S3Config
 import com.presignedurl.backend.entity.ImageEntity
-import com.presignedurl.backend.model.FileNameContentType
-import com.presignedurl.backend.model.PresignedUrl
-import com.presignedurl.backend.model.RequestGetPresinged
-import com.presignedurl.backend.model.ResponseImage
+import com.presignedurl.backend.model.request.FileNameContentType
+import com.presignedurl.backend.model.response.ResponsePresignedUrl
+import com.presignedurl.backend.model.request.RequestGetPresinged
+import com.presignedurl.backend.model.request.RequestPutPresignedUrls
+import com.presignedurl.backend.model.response.ResponseImage
 import com.presignedurl.backend.repository.ImageRepository
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -15,8 +16,8 @@ import java.util.*
 
 class UnsupportedContentTypeException(message: String) : Exception(message)
 interface ImageService {
-    fun createPutPresignedUrls (files:List<FileNameContentType>):List<PresignedUrl>
-    fun createGetPresignedUrls (getDataReq:List<RequestGetPresinged>):List<PresignedUrl>
+    fun createPutPresignedUrls (putDataReq: RequestPutPresignedUrls):List<ResponsePresignedUrl>
+    fun createGetPresignedUrls (getDataReq:List<RequestGetPresinged>):List<ResponsePresignedUrl>
     fun getAllImages():List<ResponseImage>
 }
 
@@ -26,7 +27,8 @@ class ImageServiceImpl(
     @Autowired private val s3Config: S3Config,
     val repository:ImageRepository
 ):ImageService {
-    override fun createPutPresignedUrls(files:List<FileNameContentType>):List<PresignedUrl> {
+    override fun createPutPresignedUrls(putDataReq: RequestPutPresignedUrls):List<ResponsePresignedUrl> {
+        val files = putDataReq.files
         val urls = files.map { fileNameAndContentType ->
             val extension = getExtension(fileNameAndContentType.contentType)
             val fileName = "${UUID.randomUUID()}.$extension" //階層をつけたい場合は、この先頭に/で区切って階層をつける 例） /test/folder/ファイル名
@@ -36,22 +38,22 @@ class ImageServiceImpl(
                     fileUUIDName = fileName
                 )
             )
-            PresignedUrl(
+            ResponsePresignedUrl(
                 fileName,
-                createPresignedUrl(fileName)
+                createPutPresignedUrl(fileName)
             )
         }
         return urls
     }
 
-    override fun createGetPresignedUrls(getDataReq: List<RequestGetPresinged>): List<PresignedUrl> {
+    override fun createGetPresignedUrls(getDataReq: List<RequestGetPresinged>): List<ResponsePresignedUrl> {
         val urls = getDataReq.map {
             val uuid = UUID.fromString(it.id)
             val res = repository.findById(uuid).orElseThrow {
                 NoSuchElementException("Image with ID $uuid not found")
             }
             val fileName = res.fileUUIDName
-            PresignedUrl(
+            ResponsePresignedUrl(
                 fileName,
                 createGetPresignedUrl(fileName)
             )
@@ -81,7 +83,7 @@ class ImageServiceImpl(
         }
     }
 
-    private fun createPresignedUrl(fileName: String): String {
+    private fun createPutPresignedUrl(fileName: String): String {
         return amazonS3.generatePresignedUrl(
             s3Config.bucket,
             fileName,
