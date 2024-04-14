@@ -12,10 +12,9 @@ export type requestGetPresignedUrl = {
 }
 
 class FileUploadRepository {
-    async putPresignedUrl(reqBody:requestBodyType){
+    async putPresignedUrl(reqBody:requestBodyType):Promise<responsePresignedUrl[]>{
         try {
-            const result:responsePresignedUrl[] = await axios.post('/api/images/putPresignedUrls',reqBody).then(elm => elm.data)
-            return result
+            return await axios.post('/api/images/putPresignedUrls',reqBody).then(elm => elm.data)
         } catch (err) {
             throw new Error(`err : ${err}`)
         }
