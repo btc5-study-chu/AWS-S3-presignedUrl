@@ -7,6 +7,7 @@
 - [今回のシステム概要図](#今回のシステム概要図)
 - [環境セットアップ](#環境セットアップ)
 - [AWSの設定](#AWSの設定)
+- [ChatGPT](#ChatGPT)
 - [参考](#参考)
 - [AWS番外編](#AWS番外編)
 
@@ -209,6 +210,14 @@ class S3Config(
 
 </details>
 
+# ChatGPT
+<details>
+<summary> 1. フォルダ階層を持ちたい場合</summary>
+
+
+![](./assets/images/ChatGPT_folder.png)
+
+</details>
 
 # 参考
 - [S3へのアクセス権限について](https://qiita.com/tmiki/items/87697d3d3d5330c6fc08)
@@ -260,8 +269,11 @@ psql -h <RDSエンドポイント> -U <ユーザー名> -d <DB名>
 <details>
 <summary> 2. 他少しハマったところ</summary>
 
-- ターゲットグループの通信がHealthyにならない→各リソースのセキュリティグループのインバウンド/アウトバウンドをしっかり確認して！！
+- ターゲットグループのヘルスチェックがHealthyにならない→各リソースのセキュリティグループのインバウンド/アウトバウンドをしっかり確認して！！
 - Task定義で指定するチップ。X86対応のイメージか、ARM64対応のイメージかで選択するチップが異なる。今回はARM64で実施
+- TaskのリビジョンUP毎にターゲットのIPを変更しないといけない。。。→サービス作成の時にロードバランシング設定ので作成したALB、ターゲットグループを選択しておくと問題なくTaskのリビジョンUPに追従してルーティングされる。TaskのコンテナリッスンPortはバックエンドのポート（8080）にしておくこと！！！
 
+![](./assets/images/aws-task-listen-port.png)
+![](./assets/images/aws-service-ipAuto.png)
 
 </details>
