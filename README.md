@@ -4,11 +4,20 @@
 <summary>目次</summary>
 
 
-
+- [今回のシステム概要図](#今回のシステム概要図)
 - [環境セットアップ](#環境セットアップ)
 - [AWSの設定](#AWSの設定)
 - [参考](#参考)
 - [AWS番外編](#AWS番外編)
+
+</details>
+
+# 今回のシステム概要図
+<details>
+<summary> システム概要図</summary>
+
+
+![](./assets/images/aws-system.png)
 
 </details>
 
