@@ -161,6 +161,72 @@ class S3Config(
 ```
 </details>
 
+<details>
+<summary> 5.ローカルからもS3を使用するパターン（IAMのアクセスキー等が必要）</summary>
+
+```kotlin
+import com.amazonaws.ClientConfiguration
+import com.amazonaws.auth.AWSStaticCredentialsProvider
+import com.amazonaws.auth.BasicAWSCredentials
+import com.amazonaws.client.builder.AwsClientBuilder
+import com.amazonaws.services.s3.AmazonS3
+import com.amazonaws.services.s3.AmazonS3ClientBuilder
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.context.annotation.Bean
+import org.springframework.context.annotation.Configuration
+
+@Configuration
+class S3Config(
+    @Value("\${aws.access-key}")
+    private val accessKey: String,
+
+    @Value("\${aws.secret-key}")
+    private val secretKey: String,
+
+    @Value("\${aws.s3.region}")
+    private val region: String,
+
+    @Value("\${aws.s3.endpoint}")
+    private val endpoint: String,
+
+    @Value("\${aws.s3.bucket}")
+    val bucket: String
+) {
+
+    @Bean
+    fun amazonS3(): AmazonS3 {
+        val endpointConfiguration = AwsClientBuilder.EndpointConfiguration(
+            endpoint,
+            region
+        )
+        val clientConfiguration = ClientConfiguration()
+        clientConfiguration.connectionTimeout = 10000
+        clientConfiguration.requestTimeout = 10000
+
+        return AmazonS3ClientBuilder
+            .standard()
+            .withEndpointConfiguration(endpointConfiguration)
+            .withPathStyleAccessEnabled(true)
+            .withClientConfiguration(clientConfiguration)
+            .withCredentials(AWSStaticCredentialsProvider(BasicAWSCredentials(accessKey, secretKey)))
+            .build()
+    }
+}
+
+```
+
+
+```application-sandbox.yml
+aws:
+  access-key: ${AWS_IAM_ACCESS_KEY}
+  secret-key: ${AWS_IAM_ACCESS_SECRET}
+  s3:
+    region: "region"
+    bucket: "buketname"
+    endpoint: "aws-endpoint"
+```
+</details>
+
 # AWSの設定
 
 <details>
