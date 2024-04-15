@@ -349,3 +349,29 @@ psql -h <RDSエンドポイント> -U <ユーザー名> -d <DB名>
 - Task定義で指定するチップ。X86対応のイメージか、ARM64対応のイメージかで選択するチップが異なる。今回はARM64で実施
 
 </details>
+
+<details>
+<summary> 4.バケットポリシーで穴あけする場合（S3に設定）</summary>
+
+```json
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Effect": "Allow",
+            "Principal": "*",
+            "Action": "s3:GetObject",
+            "Resource": "arn:aws:s3:::backet-name/*",
+            "Condition": {
+                "IpAddress": {
+                    "aws:SourceIp": [
+                        "穴あけしたいIP（複数指定可能）"
+                    ]
+                }
+            }
+        }
+    ]
+}
+```
+
+</details>
